@@ -12,8 +12,7 @@ std::vector<int> Range(int from, int to, int step = 1) {
         for (int i = from; i > to; i += step) {
             res.push_back(i);
         }
-    }
-    else {
+    } else {
         for (int i = from; i < to; i += step) {
             res.push_back(i);
         }
