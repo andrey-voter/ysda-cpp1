@@ -11,7 +11,9 @@ struct Triangle {
 };
 
 double TriangleArea(Point a, Point b, Point c) {
-    return 0.5 * std::abs(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+    return 0.5 * std::abs(a.x * (static_cast<double>(b.y) - c.y) +
+                          b.x * (static_cast<double>(c.y) - a.y) +
+                          c.x * (static_cast<double>(a.y) - b.y));
 }
 
 bool IsPointInTriangle(const Triangle& t, const Point& pt) {
