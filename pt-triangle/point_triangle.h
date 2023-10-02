@@ -19,6 +19,12 @@ double TriangleArea(Point a, Point b, Point c) {
 bool IsPointInTriangle(const Triangle& t, const Point& pt) {
     double total_area = TriangleArea(t.a, t.b, t.c);
     if (std::abs(total_area) < 1e-30) {
+        if ((std::abs(t.a.x - pt.x) < 1e-30 && std::abs(t.b.x - pt.x) < 1e-30 &&
+             std::abs(t.c.x - pt.x) < 1e-30) ||
+            (std::abs(t.a.y - pt.y) < 1e-30 && std::abs(t.b.y - pt.y) < 1e-30 &&
+             std::abs(t.c.y - pt.y) < 1e-30)) {
+            return true;
+        }
         return false;
     }
     double s1 = TriangleArea(t.a, t.b, pt);
