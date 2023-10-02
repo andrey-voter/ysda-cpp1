@@ -20,5 +20,5 @@ bool IsPointInTriangle(const Triangle& t, const Point& pt) {
     double s1 = TriangleArea(t.a, t.b, pt);
     double s2 = TriangleArea(t.a, t.c, pt);
     double s3 = TriangleArea(t.c, t.b, pt);
-    return std::abs(TriangleArea(t.a, t.b, t.c) - s1 - s2 - s3) < 1e-6;
+    return std::abs(TriangleArea(t.a, t.b, t.c) - s1 - s2 - s3) < 1e-30;
 }
