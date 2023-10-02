@@ -10,6 +10,13 @@ struct Triangle {
     Point a, b, c;
 };
 
+double TriangleArea(Point a, Point b, Point c) {
+    return 0.5 * std::abs(a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+}
+
 bool IsPointInTriangle(const Triangle& t, const Point& pt) {
-    throw std::runtime_error{"Not implemented"};
+    double s1 = TriangleArea(t.a, t.b, pt);
+    double s2 = TriangleArea(t.a, t.c, pt);
+    double s3 = TriangleArea(t.c, t.b, pt);
+    return std::abs(TriangleArea(t.a, t.b, t.c) - s1 - s2 - s3) < 1e-6;
 }
