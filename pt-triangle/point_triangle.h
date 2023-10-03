@@ -18,6 +18,10 @@ double TriangleArea(Point a, Point b, Point c) {
 }
 
 bool IsPointInTriangle(const Triangle& t, const Point& pt) {
+    if (((pt.x == t.a.x) && (pt.y == t.a.y)) || ((pt.x == t.b.x) && (pt.y == t.b.y)) ||
+        ((pt.x == t.c.x) && (pt.y == t.c.y))) {
+        return true;
+    }
     double total_area = TriangleArea(t.a, t.b, t.c);
     if (std::abs(total_area) < 1e-30) {
         int min_x = std::min(std::min(t.a.x, t.b.x), t.c.x);
@@ -47,18 +51,18 @@ bool IsPointInTriangle(const Triangle& t, const Point& pt) {
             if (max_x_y == min_x_y) {
                 return ((pt.x == max_x) && (pt.y == max_x_y));
             } else {
-                return ((pt.x == max_x) && ((min_x_y <= pt.y) && (pt.y <= max_x_y)));
+                return ((pt.x == max_x) && ((min_x_y < pt.y) && (pt.y < max_x_y)));
             }
         } else {
             if (max_x_y == min_x_y) {
-                return ((pt.y == max_x_y) && ((min_x <= pt.x) && (pt.x <= max_x)));
+                return ((pt.y == max_x_y) && ((min_x < pt.x) && (pt.x < max_x)));
             } else {
                 double a =
                     (static_cast<double>(max_x_y) - min_x_y) / (static_cast<double>(max_x) - min_x);
                 double b = static_cast<double>(min_x_y) - a * static_cast<double>(min_x);
                 if ((std::abs(a * static_cast<double>(pt.x) + b - static_cast<double>(pt.y)) <
                      1e-30) &&
-                    ((min_x <= pt.x) && (pt.x <= max_x))) {
+                    ((min_x < pt.x) && (pt.x < max_x))) {
                     return true;
                 }
             }
