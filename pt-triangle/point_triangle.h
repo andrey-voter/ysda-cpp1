@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <iostream>
 
 struct Point {
     int x, y;
@@ -19,11 +20,46 @@ double TriangleArea(Point a, Point b, Point c) {
 bool IsPointInTriangle(const Triangle& t, const Point& pt) {
     double total_area = TriangleArea(t.a, t.b, t.c);
     if (std::abs(total_area) < 1e-30) {
-        if ((std::abs(t.a.x - pt.x) < 1e-30 && std::abs(t.b.x - pt.x) < 1e-30 &&
-             std::abs(t.c.x - pt.x) < 1e-30) ||
-            (std::abs(t.a.y - pt.y) < 1e-30 && std::abs(t.b.y - pt.y) < 1e-30 &&
-             std::abs(t.c.y - pt.y) < 1e-30)) {
-            return true;
+        int min_x = std::min(std::min(t.a.x, t.b.x), t.c.x);
+        int max_x = std::max(std::max(t.a.x, t.b.x), t.c.x);
+
+        int max_x_y, min_x_y;
+        if (min_x == t.a.x) {
+            min_x_y = t.a.y;
+        } else {
+            if (min_x == t.b.x) {
+                min_x_y = t.b.y;
+            } else {
+                min_x_y = t.c.y;
+            }
+        }
+        if (max_x == t.a.x) {
+            max_x_y = t.a.y;
+        } else {
+            if (max_x == t.b.x) {
+                max_x_y = t.b.y;
+            } else {
+                max_x_y = t.c.y;
+            }
+        }
+
+        if (max_x == min_x) {
+            if (max_x_y == min_x_y) {
+                return (pt.x == max_x) && (pt.y == max_x_y);
+            } else {
+                return pt.x == max_x && ((min_x_y <= pt.y) && (pt.y <= max_x_y));
+            }
+        } else {
+            if (max_x_y == min_x_y) {
+                return pt.y == max_x_y && ((min_x <= pt.x) && (pt.x <= max_x));
+            } else {
+                double a = static_cast<double>(max_x_y - min_x_y) / (max_x - min_x);
+                double b = min_x_y - a * min_x;
+                if ((std::abs(a * pt.x + b - pt.y) < 1e-30) &&
+                    ((min_x <= pt.x) && (pt.x <= max_x))) {
+                    return true;
+                }
+            }
         }
         return false;
     }
