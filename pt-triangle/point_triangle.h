@@ -45,13 +45,13 @@ bool IsPointInTriangle(const Triangle& t, const Point& pt) {
 
         if (max_x == min_x) {
             if (max_x_y == min_x_y) {
-                return (pt.x == max_x) && (pt.y == max_x_y);
+                return ((pt.x == max_x) && (pt.y == max_x_y));
             } else {
-                return pt.x == max_x && ((min_x_y <= pt.y) && (pt.y <= max_x_y));
+                return ((pt.x == max_x) && ((min_x_y <= pt.y) && (pt.y <= max_x_y)));
             }
         } else {
             if (max_x_y == min_x_y) {
-                return pt.y == max_x_y && ((min_x <= pt.x) && (pt.x <= max_x));
+                return ((pt.y == max_x_y) && ((min_x <= pt.x) && (pt.x <= max_x)));
             } else {
                 double a =
                     (static_cast<double>(max_x_y) - min_x_y) / (static_cast<double>(max_x) - min_x);
