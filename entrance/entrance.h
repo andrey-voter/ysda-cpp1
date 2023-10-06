@@ -22,7 +22,7 @@ struct Student {
     std::vector<std::string> universities;
 };
 
-bool compare_students(const Student& st1, const Student& st2) {
+bool CompareStudents(const Student& st1, const Student& st2) {
     if (st1.score == st2.score) {
         if (st1.date_of_birth.year == st2.date_of_birth.year) {
             if (st1.date_of_birth.month == st2.date_of_birth.month) {
@@ -46,7 +46,7 @@ bool compare_students(const Student& st1, const Student& st2) {
     }
 }
 
-bool compare_names(const StudentName& name1, const StudentName& name2) {
+bool CompareNames(const StudentName& name1, const StudentName& name2) {
     if (name1.surname == name2.surname) {
         return name1.name < name2.name;
     } else {
@@ -71,7 +71,7 @@ std::map<std::string, std::vector<StudentName>> GetStudents(
         universities[pair.first] = pair.second;
     }
 
-    std::sort(students.begin(), students.end(), compare_students);
+    std::sort(students.begin(), students.end(), CompareStudents);
 
     std::map<std::string, std::vector<StudentName>> ans;
 
@@ -88,7 +88,7 @@ std::map<std::string, std::vector<StudentName>> GetStudents(
 
     for (auto& pair : ans) {
         std::vector<StudentName>& cur_uni_students = pair.second;
-        std::sort(cur_uni_students.begin(), cur_uni_students.end(), compare_names);
+        std::sort(cur_uni_students.begin(), cur_uni_students.end(), CompareNames);
     }
     return ans;
 }
