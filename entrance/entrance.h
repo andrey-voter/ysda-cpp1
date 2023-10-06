@@ -28,7 +28,7 @@ bool CompareStudents(const Student& st1, const Student& st2) {
             if (st1.date_of_birth.month == st2.date_of_birth.month) {
                 if (st1.date_of_birth.day == st2.date_of_birth.day) {
                     if (st1.full_name.surname == st2.full_name.surname) {
-                        return st1.full_name.name < st2.full_name.surname;
+                        return st1.full_name.name < st2.full_name.name;
                     } else {
                         return st1.full_name.surname < st2.full_name.surname;
                     }
