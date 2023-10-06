@@ -86,6 +86,13 @@ std::map<std::string, std::vector<StudentName>> GetStudents(
         }
     }
 
+    for (const auto& pair : universities) {
+        if (ans.find(pair.first) == ans.end()) {
+            std::vector<StudentName> filler;
+            ans[pair.first] = filler;
+        }
+    }
+
     for (auto& pair : ans) {
         std::vector<StudentName>& cur_uni_students = pair.second;
         std::sort(cur_uni_students.begin(), cur_uni_students.end(), CompareNames);
