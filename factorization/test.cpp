@@ -21,6 +21,7 @@ TEST_CASE("Primes") {
     }
 }
 
+
 TEST_CASE("Some Tests") {
     CHECK_THAT(Factorize(17'239ll * 17'239), Equals(Factors{{17'239, 2}}));
     CHECK_THAT(Factorize(183'562'547'364), Equals(Factors{{2, 2}, {3, 2}, {7, 2}, {101, 4}}));
