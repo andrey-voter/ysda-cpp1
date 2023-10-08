@@ -5,13 +5,13 @@
 
 class Matrix {
 public:
-    explicit Matrix(int n_rows, int n_cols)
+    Matrix(int n_rows, int n_cols)
         : matrix_(std::vector<std::vector<double>>(n_rows, std::vector<double>(n_cols))) {
     }
-    explicit Matrix(int n_row_cols)
+    Matrix(int n_row_cols)
         : matrix_(std::vector<std::vector<double>>(n_row_cols, std::vector<double>(n_row_cols))) {
     }
-    explicit Matrix(std::vector<std::vector<double>> data) : matrix_(data) {
+    Matrix(std::vector<std::vector<double>> data) : matrix_(data) {
     }
 
     size_t Rows() const {

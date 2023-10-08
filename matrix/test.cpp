@@ -69,15 +69,15 @@ TEST_CASE("Operations") {
     Matrix c{{{-1.0, -1.0}, {1.0, 1.0}, {1.0, -1.0}}};
 
     CHECK_FALSE(EqualMatrix(a, Transpose(a)));
-    CHECK(EqualMatrix(Transpose(a), Matrix{{{1.0, 4.0}, {2.0, 5.0}, {3.0, 6.0}}}));
+    CHECK(EqualMatrix(Transpose(a), {{{1.0, 4.0}, {2.0, 5.0}, {3.0, 6.0}}}));
 
     auto old_a = a;
-    REQUIRE(EqualMatrix(a += b, Matrix{{{1.0, 3.0, 3.0}, {5.0, 6.0, 8.0}}}));
+    REQUIRE(EqualMatrix(a += b, {{{1.0, 3.0, 3.0}, {5.0, 6.0, 8.0}}}));
     REQUIRE(EqualMatrix(a -= b, old_a));
-    REQUIRE(EqualMatrix(a -= a, Matrix{2, 3}));
+    REQUIRE(EqualMatrix(a -= a, {2, 3}));
 
-    REQUIRE(EqualMatrix(b * c, Matrix{{{1.0, 1.0}, {2.0, -2.0}}}));
-    REQUIRE(EqualMatrix(b *= c, Matrix{{{1.0, 1.0}, {2.0, -2.0}}}));
+    REQUIRE(EqualMatrix(b * c, {{{1.0, 1.0}, {2.0, -2.0}}}));
+    REQUIRE(EqualMatrix(b *= c, {{{1.0, 1.0}, {2.0, -2.0}}}));
 }
 
 TEST_CASE("Big") {
