@@ -13,7 +13,7 @@ Iterator LocalMax(Iterator first, Iterator last) {
     Iterator prev = first;
     first++;
     Iterator ans = first;
-    while (first < last) {
+    while (first != last) {
         Iterator next = std::next(first);
         if (next != last) {
             if ((*prev) < (*ans) and (*next) < (*ans)) {
