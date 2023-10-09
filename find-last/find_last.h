@@ -4,5 +4,12 @@
 
 template <class Iterator, class T>
 Iterator FindLast(Iterator first, Iterator last, const T& value) {
-    throw std::runtime_error{"Not implemented"};
+    Iterator ans = last;
+    while (first != last) {
+        if ((*first) == value) {
+            ans = first;
+        }
+        first++;
+    }
+    return ans;
 }
