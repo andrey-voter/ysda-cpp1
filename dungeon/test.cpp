@@ -128,7 +128,6 @@ TEST_CASE("SimpleDungeons") {
 
     std::vector connected = {true, true, true, true, true, false, false, false, false};
     REQUIRE(connected.size() == test_dungeons.size());
-
     for (size_t i = 0; i < test_dungeons.size(); ++i) {
         std::stringstream dungeon_stream{test_dungeons[i]};
         auto dungeon = ReadDungeon(dungeon_stream);
