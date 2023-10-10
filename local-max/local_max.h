@@ -4,7 +4,7 @@
 
 template <class Iterator>
 Iterator LocalMax(Iterator first, Iterator last) {
-    if (std::next(first) == last) {
+    if (first == last or std::next(first) == last) {
         return first;
     }
     if ((*(std::next(first))) < (*first)) {
@@ -13,10 +13,10 @@ Iterator LocalMax(Iterator first, Iterator last) {
     Iterator prev = first;
     first++;
     Iterator ans = first;
-    while (first != last) {
-        Iterator next = std::next(first);
+    while (ans != last) {
+        Iterator next = std::next(ans);
         if (next != last) {
-            if ((*prev) < (*ans) and (*next) < (*ans)) {
+            if (((*prev) < (*ans)) and ((*next) < (*ans))) {
                 return ans;
             }
         } else {
