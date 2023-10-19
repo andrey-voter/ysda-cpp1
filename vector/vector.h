@@ -3,7 +3,6 @@
 #include <iterator>
 #include <cstddef>
 #include <algorithm>
-#include <iostream>
 
 class Vector {
 public:
@@ -154,7 +153,6 @@ public:
     }
 
     void Swap(Vector& other) {
-        std::cout << "swap" << std::endl;
         std::swap(data_, other.data_);
         std::swap(size_, other.size_);
         std::swap(capacity_, other.capacity_);
