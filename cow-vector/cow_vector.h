@@ -2,6 +2,7 @@
 
 #include <string>
 #include <cstddef>
+#include <iostream>
 
 struct State {
     int ref_count = 1;
@@ -40,11 +41,12 @@ public:
     //    }
 
 private:
-    State* state_;
+    State* state_ = nullptr;
 };
 
 COWVector::COWVector() : state_(new State) {
     state_->ref_count = 1;
+    state_->data_ = nullptr;
 }
 
 COWVector::~COWVector() {
@@ -62,6 +64,7 @@ COWVector& COWVector::operator=(const COWVector& other) {
     if (&other != this) {
         if (!--state_->ref_count) {
             delete[] state_->data_;
+            delete state_;
         }
         state_ = other.state_;
         ++state_->ref_count;
