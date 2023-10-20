@@ -50,6 +50,7 @@ COWVector::COWVector() : state_(new State) {
 COWVector::~COWVector() {
     if (!--state_->ref_count) {
         delete[] state_->data_;
+        delete state_;
     }
 }
 
