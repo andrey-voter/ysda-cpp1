@@ -1,7 +1,6 @@
 #pragma once
 
 #include <vector.h>
-#include <parameters.h>
 
 class Intersection {
 public:

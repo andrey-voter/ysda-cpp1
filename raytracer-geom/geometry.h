@@ -7,7 +7,6 @@
 #include <ray.h>
 
 #include <optional>
-#include <parameters.h>
 
 std::optional<Intersection> GetIntersection(const Ray& ray, const Sphere& sphere) {
     Vector center = sphere.GetCenter() - ray.GetOrigin();
@@ -114,8 +113,10 @@ std::optional<Vector> Refract(const Vector& ray, const Vector& normal, double et
     return normalized_ray * eta + normal * (eta * c - std::sqrt(1 - eta * eta * (1 - c * c)));
 }
 Vector GetBarycentricCoords(const Triangle& triangle, const Vector& point) {
-    double s_bcx = Triangle({triangle[1], triangle[2], point}).Area() * 0.5;
-    double s_cax = Triangle({triangle[2], triangle[0], point}).Area() * 0.5;
-    double s_abx = Triangle({triangle[0], triangle[1], point}).Area() * 0.5;
-    return Vector{triangle[0] * s_bcx + triangle[1] * s_cax + triangle[2] * s_abx};
+    double s_bcx = Triangle({triangle[1], triangle[2], point}).Area() / triangle.Area();
+    double s_cax = Triangle({triangle[2], triangle[0], point}).Area() / triangle.Area();
+    double s_abx = Triangle({triangle[0], triangle[1], point}).Area() / triangle.Area();
+    Vector ans = Vector{s_bcx, s_cax, s_abx};
+//    ans.Normalize();
+    return ans;
 }
