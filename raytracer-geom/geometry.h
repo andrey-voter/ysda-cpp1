@@ -7,6 +7,7 @@
 #include <ray.h>
 
 #include <optional>
+#include <cmath>
 
 std::optional<Intersection> GetIntersection(const Ray& ray, const Sphere& sphere) {
     Vector center = sphere.GetCenter() - ray.GetOrigin();
@@ -117,6 +118,6 @@ Vector GetBarycentricCoords(const Triangle& triangle, const Vector& point) {
     double s_cax = Triangle({triangle[2], triangle[0], point}).Area() / triangle.Area();
     double s_abx = Triangle({triangle[0], triangle[1], point}).Area() / triangle.Area();
     Vector ans = Vector{s_bcx, s_cax, s_abx};
-//    ans.Normalize();
+    //    ans.Normalize();
     return ans;
 }

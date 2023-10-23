@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstddef>
-
+#include <cmath>
 
 class Vector {
 public:

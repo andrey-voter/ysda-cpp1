@@ -4,7 +4,7 @@
 
 class Sphere {
 public:
-    Sphere(const Vector& center, double radius) : center_(center), radius_(radius) {};
+    Sphere(const Vector& center, double radius) : center_(center), radius_(radius){};
 
     const Vector& GetCenter() const {
         return center_;
