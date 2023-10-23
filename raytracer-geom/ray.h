@@ -19,4 +19,3 @@ private:
     Vector origin_;
     Vector direction_;
 };
-
