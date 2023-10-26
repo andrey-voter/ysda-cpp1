@@ -9,7 +9,11 @@ struct Object {
     const Material* material = nullptr;
     Triangle polygon;
 
-    const Vector* GetNormal(size_t index) const;
+    const Vector* GetNormal(size_t index) const {
+        return normals[index];
+    }
+
+    std::array<const Vector*, 3> normals = {nullptr, nullptr, nullptr};
 };
 
 struct SphereObject {
