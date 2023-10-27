@@ -3,6 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cmath>
+#include <vector>
 
 class Vector {
 public:
@@ -48,8 +49,20 @@ public:
     }
 
     Vector operator+(const Vector& rhs) const {
-        return Vector(data_[0] + rhs.data_[0], data_[1] + rhs.data_[1], data_[2] + rhs.data_[2]);
+        Vector cpy(this->data_);
+        cpy += rhs;
+        return cpy;
+
     }
+
+    Vector operator+=(const Vector& rhs) {
+        data_[0] += rhs.data_[0];
+        data_[1] +=  rhs.data_[1];
+        data_[2] += rhs.data_[2];
+        return *this;
+    }
+
+
 
     Vector operator*(const double num) const {
         Vector cpy = Vector(this->data_);
@@ -64,9 +77,34 @@ public:
         return *this;
     }
 
+    Vector operator/=(const double num) {
+        data_[0] /= num;
+        data_[1] /=  num;
+        data_[2] /= num;
+        return *this;
+    }
+
+    bool Zero() const {
+        return GetLength() == 0;
+    }
+
+    Vector operator-() {
+        return Vector{-data_[0], -data_[1], -data_[2]};
+    }
+
 private:
     std::array<double, 3> data_;
 };
+
+Vector operator*(const Vector& lhs, const Vector& rhs) {
+    return Vector{lhs[0] * rhs[0], lhs[1] * rhs[1], lhs[2] * rhs[2]};
+}
+
+Vector operator*(double number, const Vector& vector) {
+    Vector result = vector;
+    result *= number;
+    return result;
+}
 
 double DotProduct(const Vector& a, const Vector& b) {
     double prod = 0;
@@ -85,4 +123,20 @@ Vector CrossProduct(const Vector& a, const Vector& b) {
 
 double Length(const Vector& v) {
     return v.GetLength();
+}
+
+Vector LinearCombination(const Vector& coefficients, const std::vector<Vector*>& vectors) {
+    Vector result = {0, 0, 0};
+    for (size_t i = 0; i < vectors.size(); ++i) {
+        result += coefficients[i] * (*(vectors[i]));
+    }
+    return result;
+}
+
+Vector LinearCombination(const Vector& coefficients, const std::array<Vector*, 3>& vectors) {
+    Vector result = {0, 0, 0};
+    for (size_t i = 0; i < 3; ++i) {
+        result += coefficients[i] * (*(vectors[i]));
+    }
+    return result;
 }

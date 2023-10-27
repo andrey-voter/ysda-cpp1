@@ -15,6 +15,10 @@ public:
         return direction_;
     }
 
+    void Propell(double magnitude) {
+        origin_ += direction_ * magnitude;
+    }
+
 private:
     Vector origin_;
     Vector direction_;

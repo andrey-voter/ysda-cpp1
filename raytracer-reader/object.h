@@ -13,7 +13,7 @@ struct Object {
         return normals[index];
     }
 
-    std::array<const Vector*, 3> normals = {nullptr, nullptr, nullptr};
+    std::array<Vector*, 3> normals = {nullptr, nullptr, nullptr};
 };
 
 struct SphereObject {
