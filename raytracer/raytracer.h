@@ -6,193 +6,227 @@
 
 #include <filesystem>
 
-// Image Render(const std::filesystem::path& path, const CameraOptions& camera_options,
-//              const RenderOptions& render_options) {
-//     throw std::runtime_error{"Not implemented"};
-// }
-
 #include <string>
 #include <vector>
 
+#include <geometry.h>
+#include <scene.h>
+#include <camera.h>
 #include <vector.h>
-#include <illumination.h>
-// #include <image.h>
-// #include "options/camera_options.h"
-// #include "options/render_options.h"
-#include <raycaster.h>
 
-void ToneMappingAndGammaCorrection(std::vector<std::vector<Vector>>& pixels) {
-    double coefficient = 0;
-    for (size_t i = 0; i < pixels.size(); ++i) {
-        for (size_t j = 0; j < pixels[0].size(); ++j) {
-            for (int color_index = 0; color_index < 3; ++color_index) {
-                coefficient = std::max(coefficient, pixels[i][j][color_index]);
-            }
+constexpr double kEps = 1e-6;
+
+bool LightSeen(const Vector& point, const Light& light, const Scene& scene) {
+    Vector light_direction = light.position - point;
+    double distance = Length(light_direction);
+    light_direction.Normalize();
+    Vector origin = point + kEps * light_direction;
+    Ray ray(origin, light_direction);
+    for (const Object& object : scene.GetObjects()) {
+        std::optional<Intersection> intersection = GetIntersection(ray, object.polygon);
+        if (intersection.has_value() && (intersection->GetDistance() < distance)) {
+            return false;
         }
     }
 
-    for (size_t i = 0; i < pixels.size(); ++i) {
-        for (size_t j = 0; j < pixels[0].size(); ++j) {
-            for (int color_index = 0; color_index < 3; ++color_index) {
-                pixels[i][j][color_index] =
-                    pixels[i][j][color_index] *
-                    (1 + pixels[i][j][color_index] / (coefficient * coefficient)) /
-                    (1 + pixels[i][j][color_index]);
-                pixels[i][j][color_index] = std::pow(pixels[i][j][color_index], 1 / 2.2);
-            }
+    for (const SphereObject& sphere_object : scene.GetSphereObjects()) {
+        std::optional<Intersection> intersection = GetIntersection(ray, sphere_object.sphere);
+        if (intersection.has_value() && (intersection->GetDistance() < distance)) {
+            return false;
         }
     }
+
+    return true;
 }
 
-class Raytracer {
-public:
-    Raytracer(const std::string& filename, const CameraOptions& camera_options,
-              const RenderOptions& render_options)
-        : scene_(ReadScene(filename)),
-          render_options_(render_options),
-          ray_caster_(camera_options) {
+Vector CastRay(const Ray& ray, const Scene& scene, RenderMode mode, int recursion_depth,
+               bool is_inside) {
+
+    if (recursion_depth == -1) {
+        return Vector(0, 0, 0);
     }
 
-public:
-    Image Render() {
-        switch (render_options_.mode) {
-            case RenderMode::kDepth:
-                return RenderDepth();
-            case RenderMode::kNormal:
-                return RenderNormal();
-            case RenderMode::kFull:
-                return RenderFull();
-            default:
-                throw std::runtime_error("Bad render mode");
+    std::optional<Intersection> closest_object_intersection = Intersection();
+    std::optional<Object> closest_object;
+    for (const Object& object : scene.GetObjects()) {
+        std::optional<Intersection> intersection = GetIntersection(ray, object.polygon);
+        if (intersection.has_value()) {
+            if (intersection->GetDistance() < closest_object_intersection->GetDistance()) {
+                closest_object_intersection = intersection;
+                closest_object = object;
+            }
         }
     }
 
-private:
-    Image RenderDepth() {
-        Image image(ray_caster_.screen_width_, ray_caster_.screen_height_);
-        //                image.PrepareImage(image.Width(), image.Height());
+    std::optional<Intersection> closest_sphere_intersection = Intersection();
+    std::optional<SphereObject> closest_sphere_object;
+    for (const SphereObject& sphere : scene.GetSphereObjects()) {
+        std::optional<Intersection> intersection = GetIntersection(ray, sphere.sphere);
+        if (intersection.has_value()) {
+            if (intersection->GetDistance() < closest_sphere_intersection->GetDistance()) {
+                closest_sphere_intersection = intersection;
+                closest_sphere_object = sphere;
+            }
+        }
+    }
 
-        std::vector<std::vector<double>> depths(image.Width(), std::vector<double>(image.Width()));
-        double max_depth = 0;
+    if (mode == RenderMode::kDepth) {
+        double depth = 0;
+        if (closest_object.has_value()) {
+            if (closest_sphere_object.has_value()) {
+                if (closest_object_intersection->GetDistance() <
+                    closest_sphere_intersection->GetDistance()) {
 
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                auto cast_ray = ray_caster_(i, j);
-                auto possible_intersection =
-                    FindClosestIntersectionAndMaterial(scene_, cast_ray).first;
-
-                if (possible_intersection) {
-                    depths[i][j] = possible_intersection.value().GetDistance();
-                    max_depth = std::max(depths[i][j], max_depth);
+                    depth = closest_object_intersection->GetDistance();
                 } else {
-                    depths[i][j] = 0;
+                    depth = closest_sphere_intersection->GetDistance();
+                }
+            } else {
+                depth = closest_object_intersection->GetDistance();
+            }
+        } else if (closest_sphere_object.has_value()) {
+            depth = closest_sphere_intersection->GetDistance();
+        }
+
+        return Vector(depth, depth, depth);
+    }
+
+    if (mode == RenderMode::kNormal) {
+        Vector normal;
+        if (closest_object.has_value()) {
+            if (closest_sphere_object.has_value()) {
+                if (closest_object_intersection->GetDistance() <
+                    closest_sphere_intersection->GetDistance()) {
+                    if (closest_object->CorrectNormals()) {
+                        normal = closest_object->GetWeightedNormals(
+                            closest_object_intersection->GetPosition());
+                    } else {
+                        normal = closest_object_intersection->GetNormal();
+                    }
+                } else {
+                    normal = closest_sphere_intersection->GetNormal();
+                }
+            } else {
+                if (closest_object->CorrectNormals()) {
+                    normal = closest_object->GetWeightedNormals(
+                        closest_object_intersection->GetPosition());
+                } else {
+                    normal = closest_object_intersection->GetNormal();
                 }
             }
+        } else if (closest_sphere_object.has_value()) {
+            normal = closest_sphere_intersection->GetNormal();
         }
-        // Normalize
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                if (depths[i][j] == 0) {
-                    depths[i][j] = 1;
+
+        return normal;
+    }
+
+    if (mode == RenderMode::kFull) {
+        std::optional<Intersection> closest_intersection;
+        const Material* closest_material;
+        Vector normal;
+        if (closest_object.has_value()) {
+            if (closest_sphere_object.has_value()) {
+                if (closest_object_intersection->GetDistance() <
+                    closest_sphere_intersection->GetDistance()) {
+
+                    closest_intersection = closest_object_intersection;
+                    if (closest_object->CorrectNormals()) {
+                        normal =
+                            closest_object->GetWeightedNormals(closest_intersection->GetPosition());
+                    } else {
+                        normal = closest_intersection->GetNormal();
+                    }
+                    closest_material = closest_object->material;
+
                 } else {
-                    depths[i][j] /= max_depth;
+                    closest_intersection = closest_sphere_intersection;
+                    normal = closest_intersection->GetNormal();
+                    closest_material = closest_sphere_object->material;
                 }
-            }
-        }
-
-        // Build pixels
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                int brightness = static_cast<int>((depths[i][j] - kEpsilon) * 256);
-                image.SetPixel({brightness, brightness, brightness}, j, i);
-            }
-        }
-
-        return image;
-    }
-
-    Image RenderNormal() {
-        Image image(ray_caster_.screen_width_, ray_caster_.screen_height_);
-        //                image.PrepareImage(image.Width(), image.Height());
-
-        std::vector<std::vector<Vector>> normals(image.Width(), std::vector<Vector>(image.Width()));
-
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                auto cast_ray = ray_caster_(i, j);
-                // Check all possible intersections
-                auto possible_intersection =
-                    FindClosestIntersectionAndMaterial(scene_, cast_ray).first;
-
-                if (possible_intersection) {
-                    // Save pixel value
-                    normals[i][j] = possible_intersection.value().GetNormal();
+            } else {
+                closest_intersection = closest_object_intersection;
+                if (closest_object->CorrectNormals()) {
+                    normal =
+                        closest_object->GetWeightedNormals(closest_intersection->GetPosition());
                 } else {
-                    normals[i][j] = {-1, -1, -1};
+                    normal = closest_intersection->GetNormal();
                 }
+                closest_material = closest_object->material;
             }
+        } else if (closest_sphere_object.has_value()) {
+            closest_intersection = closest_sphere_intersection;
+            normal = closest_intersection->GetNormal();
+            closest_material = closest_sphere_object->material;
         }
-        // Normalize
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                normals[i][j] /= 2;
-                normals[i][j] += Vector{0.5, 0.5, 0.5};
+
+        if (!closest_intersection.has_value()) {
+            return Vector(0, 0, 0);
+        }
+
+        Vector result = closest_material->ambient_color + closest_material->intensity;
+
+        Vector v_light, v_eye, v_r, l_d, l_s;
+        for (const Light& light : scene.GetLights()) {
+            if (LightSeen(closest_intersection->GetPosition(), light, scene)) {
+                v_light = Normalize(light.position - closest_intersection->GetPosition());
+                l_d = light.intensity * std::max(0.0, DotProduct(normal, v_light));
+                v_eye = -ray.GetDirection();
+                v_r = 2 * (DotProduct(normal, v_light) * normal) - v_light;
+                l_s = light.intensity * pow(std::max(0.0, DotProduct(v_eye, v_r)),
+                                            closest_material->specular_exponent);
+                result += closest_material->albedo[0] * (closest_material->diffuse_color * l_d +
+                                                         closest_material->specular_color * l_s);
             }
         }
 
-        // Build pixels
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                auto normal = normals[i][j];
+        if (closest_material->albedo[1] && !is_inside) {
+            Vector reflected_direction = Reflect(ray.GetDirection(), normal);
+            Vector origin = closest_intersection->GetPosition() + kEps * normal;
+            result += closest_material->albedo[1] * CastRay(Ray(origin, reflected_direction), scene,
+                                                            mode, recursion_depth - 1, is_inside);
+        }
 
-                int red = static_cast<int>((normal[0] - kEpsilon) * 256);
-                int green = static_cast<int>((normal[1] - kEpsilon) * 256);
-                int blue = static_cast<int>((normal[2] - kEpsilon) * 256);
-                image.SetPixel({red, green, blue}, j, i);
+        if (closest_material->albedo[2]) {
+            double eta = 1.0 / closest_material->refraction_index;
+            double albedo = closest_material->albedo[2];
+            if (is_inside) {
+                eta = 1.0 / eta;
+                albedo = 1.0;
+            }
+            std::optional<Vector> refracted_direction = Refract(ray.GetDirection(), normal, eta);
+            if (refracted_direction.has_value()) {
+                Vector origin = closest_intersection->GetPosition() - kEps * normal;
+                result += albedo * CastRay(Ray(origin, *refracted_direction), scene, mode,
+                                           recursion_depth - 1, !is_inside);
             }
         }
 
-        return image;
+        return result;
     }
 
-    Image RenderFull() {
-        Image image(ray_caster_.screen_width_, ray_caster_.screen_height_);
-        //                image.PrepareImage(image.Width(), image.Height());
+    return Vector(0, 0, 0);
+}
 
-        std::vector<std::vector<Vector>> pseudo_pixels(image.Width(),
-                                                       std::vector<Vector>(image.Width()));
-
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                auto cast_ray = ray_caster_(i, j);
-                pseudo_pixels[i][j] =
-                    CalculateIllumination(scene_, cast_ray, false, render_options_.depth);
-            }
-        }
-        // Normalize
-        ToneMappingAndGammaCorrection(pseudo_pixels);
-        // Build pixels
-        for (int i = 0; i < image.Width(); ++i) {
-            for (int j = 0; j < image.Height(); ++j) {
-                auto pseudo_pixel = pseudo_pixels[i][j];
-
-                int red = static_cast<int>((pseudo_pixel[0] - kEpsilon) * 256);
-                int green = static_cast<int>((pseudo_pixel[1] - kEpsilon) * 256);
-                int blue = static_cast<int>((pseudo_pixel[2] - kEpsilon) * 256);
-                image.SetPixel({red, green, blue}, j, i);
-            }
-        }
-
-        return image;
-    }
-
-private:
-    Scene scene_;
-    RenderOptions render_options_;
-    RayCaster ray_caster_;
-};
-
-Image Render(const std::string& filename, const CameraOptions& camera_options,
+Image Render(const std::filesystem::path& path, const CameraOptions& camera_options,
              const RenderOptions& render_options) {
-    return Raytracer(filename, camera_options, render_options).Render();
+    MyCam camera(camera_options);
+    Scene scene = ReadScene(path);
+    bool is_inside = false;
+
+    for (size_t y = 0; y < camera.GetHeight(); ++y) {
+        for (size_t x = 0; x < camera.GetWidth(); ++x) {
+            Ray ray(camera.GenerateRay(y, x));
+            Vector color =
+                CastRay(ray, scene, render_options.mode, render_options.depth, is_inside);
+            camera.SetPixel(color, y, x);
+        }
+    }
+
+    camera.ToneMapping(render_options.mode);
+    if (render_options.mode == RenderMode::kFull) {
+        camera.GammaCorrection();
+    }
+
+    return camera.GetImage();
 }

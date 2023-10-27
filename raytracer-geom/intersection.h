@@ -9,6 +9,8 @@ public:
         normal_.Normalize();
     };
 
+    Intersection() : distance_(std::numeric_limits<double>::max()){};
+
     const Vector& GetPosition() const {
         return position_;
     }

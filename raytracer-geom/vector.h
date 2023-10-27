@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cmath>
 #include <vector>
+#include <iostream>
 
 class Vector {
 public:
@@ -33,6 +34,17 @@ public:
 
     double GetLength() const {
         return std::sqrt(data_[0] * data_[0] + data_[1] * data_[1] + data_[2] * data_[2]);
+    }
+
+    std::array<double, 3> GetData() const {
+        return data_;
+    }
+
+    bool IsZero() const {
+        if (data_[0] == 0.0 && data_[1] == 0.0 && data_[2] == 0.0) {
+            return true;
+        }
+        return false;
     }
 
     Vector operator-(const Vector& rhs) const {
@@ -74,6 +86,12 @@ public:
         return *this;
     }
 
+    Vector operator/(const double num) const {
+        Vector cpy = Vector(this->data_);
+        cpy /= num;
+        return cpy;
+    }
+
     Vector operator/=(const double num) {
         data_[0] /= num;
         data_[1] /= num;
@@ -81,17 +99,28 @@ public:
         return *this;
     }
 
-    bool Zero() const {
-        return GetLength() == 0;
-    }
-
     Vector operator-() {
         return Vector{-data_[0], -data_[1], -data_[2]};
+    }
+
+    Vector operator-() const {
+        Vector result = *this;
+        result[0] = -result[0];
+        result[1] = -result[1];
+        result[2] = -result[2];
+        return result;
     }
 
 private:
     std::array<double, 3> data_;
 };
+
+Vector operator/(Vector lhs, const Vector& rhs) {
+    lhs[0] /= rhs[0];
+    lhs[1] /= rhs[1];
+    lhs[2] /= rhs[2];
+    return lhs;
+}
 
 Vector operator*(const Vector& lhs, const Vector& rhs) {
     return Vector{lhs[0] * rhs[0], lhs[1] * rhs[1], lhs[2] * rhs[2]};
@@ -103,6 +132,20 @@ Vector operator*(double number, const Vector& vector) {
     return result;
 }
 
+Vector operator+(Vector lhs, double rhs) {
+    lhs[0] += rhs;
+    lhs[1] += rhs;
+    lhs[2] += rhs;
+    return lhs;
+}
+
+Vector operator+(double lhs, Vector rhs) {
+    rhs[0] += lhs;
+    rhs[1] += lhs;
+    rhs[2] += lhs;
+    return rhs;
+}
+
 double DotProduct(const Vector& a, const Vector& b) {
     double prod = 0;
     for (int i = 0; i < 3; ++i) {
@@ -110,6 +153,7 @@ double DotProduct(const Vector& a, const Vector& b) {
     }
     return prod;
 }
+
 Vector CrossProduct(const Vector& a, const Vector& b) {
     Vector cross_prod;
     cross_prod[0] = a[1] * b[2] - a[2] * b[1];
@@ -122,18 +166,15 @@ double Length(const Vector& v) {
     return v.GetLength();
 }
 
-Vector LinearCombination(const Vector& coefficients, const std::vector<Vector*>& vectors) {
-    Vector result = {0, 0, 0};
-    for (size_t i = 0; i < vectors.size(); ++i) {
-        result += coefficients[i] * (*(vectors[i]));
-    }
-    return result;
+Vector Pow(Vector lhs, double degree) {
+    lhs[0] = pow(lhs[0], degree);
+    lhs[1] = pow(lhs[1], degree);
+    lhs[2] = pow(lhs[2], degree);
+
+    return lhs;
 }
 
-Vector LinearCombination(const Vector& coefficients, const std::array<Vector*, 3>& vectors) {
-    Vector result = {0, 0, 0};
-    for (size_t i = 0; i < 3; ++i) {
-        result += coefficients[i] * (*(vectors[i]));
-    }
-    return result;
+Vector Normalize(Vector vector) {
+    vector.Normalize();
+    return vector;
 }

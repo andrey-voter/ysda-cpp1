@@ -21,3 +21,6 @@ CppProperties.json
 build_asan
 .DS_Store
 .cache/
+llvm.sh
+llvm.sh.1
+tmp

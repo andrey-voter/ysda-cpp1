@@ -68,7 +68,7 @@ std::optional<Intersection> GetIntersection(const Ray& ray, const Triangle& tria
     a = DotProduct(edge1, h);
 
     if (std::abs(a) < eps) {
-        return {};  // The ray is parallel to the triangle.
+        return {};
     }
 
     f = 1.0 / a;
@@ -82,7 +82,7 @@ std::optional<Intersection> GetIntersection(const Ray& ray, const Triangle& tria
     if (v < 0.0 || u + v > 1.0) {
         return {};
     }
-    // At this stage we can compute t to find out where the intersection point is on the line.
+
     double t = f * DotProduct(edge2, q);
     if (t > eps)  // ray intersection
     {
@@ -95,7 +95,7 @@ std::optional<Intersection> GetIntersection(const Ray& ray, const Triangle& tria
         return Intersection{intersection_point, normal,
                             Length(intersection_point - ray.GetOrigin())};
     } else {
-        return {};  // This means that there is a line intersection but not a ray intersection.
+        return {};
     }
 }
 
@@ -118,6 +118,5 @@ Vector GetBarycentricCoords(const Triangle& triangle, const Vector& point) {
     double s_cax = Triangle({triangle[2], triangle[0], point}).Area() / triangle.Area();
     double s_abx = Triangle({triangle[0], triangle[1], point}).Area() / triangle.Area();
     Vector ans = Vector{s_bcx, s_cax, s_abx};
-    //    ans.Normalize();
     return ans;
 }
