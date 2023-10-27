@@ -7,7 +7,7 @@
 
 #include <vector.h>
 #include <ray.h>
-#include "options/camera_options.h"
+#include <options/camera_options.h>
 
 class RayCaster {
 public:

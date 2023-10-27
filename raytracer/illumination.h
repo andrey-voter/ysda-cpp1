@@ -7,20 +7,20 @@
 
 #include <string>
 
-#include "vector.h"
-#include "intersection.h"
-#include "ray.h"
-#include "geometry.h"
-#include "material.h"
-#include "light.h"
-#include "object.h"
-#include "scene.h"
-
+#include <vector.h>
+#include <intersection.h>
+#include <ray.h>
+#include <geometry.h>
+#include <material.h>
+#include <light.h>
+#include <object.h>
+#include <scene.h>
+#include <algorithm>
 
 const double kEpsilon = 0.0001;
 
-std::pair<std::optional<Intersection>, const Material*>
-GetIntersectionAndMaterial(const Ray& ray, const Object& object) {
+std::pair<std::optional<Intersection>, const Material*> GetIntersectionAndMaterial(
+    const Ray& ray, const Object& object) {
     auto trivial_normal_intersection = GetIntersection(ray, object.polygon);
 
     if (!trivial_normal_intersection) {
@@ -37,17 +37,17 @@ GetIntersectionAndMaterial(const Ray& ray, const Object& object) {
         object.normals);
 
     return {Intersection{trivial_normal_intersection->GetPosition(), true_normal,
-                                   trivial_normal_intersection->GetDistance()},
+                         trivial_normal_intersection->GetDistance()},
             object.material};
 }
 
-inline std::pair<std::optional<Intersection>, const Material*>
-GetIntersectionAndMaterial(const Ray& ray, const SphereObject& sphere_object) {
+inline std::pair<std::optional<Intersection>, const Material*> GetIntersectionAndMaterial(
+    const Ray& ray, const SphereObject& sphere_object) {
     return {GetIntersection(ray, sphere_object.sphere), sphere_object.material};
 }
 
-std::vector<std::pair<Intersection, const Material*>>
-FindAllIntersectionsAndMaterials(const Scene& scene, const Ray& ray) {
+std::vector<std::pair<Intersection, const Material*>> FindAllIntersectionsAndMaterials(
+    const Scene& scene, const Ray& ray) {
     std::vector<std::pair<Intersection, const Material*>> intersections;
     for (const auto& object : scene.GetObjects()) {
         auto [possible_intersection, material] = GetIntersectionAndMaterial(ray, object);
@@ -65,8 +65,7 @@ FindAllIntersectionsAndMaterials(const Scene& scene, const Ray& ray) {
     return intersections;
 }
 
-std::pair<std::optional<Intersection>, const Material*>
-FindClosestIntersectionAndMaterial(
+std::pair<std::optional<Intersection>, const Material*> FindClosestIntersectionAndMaterial(
     std::vector<std::pair<Intersection, const Material*>> intersections) {
     if (!intersections.empty()) {
         return *std::min_element(
@@ -78,8 +77,8 @@ FindClosestIntersectionAndMaterial(
     }
 }
 
-std::pair<std::optional<Intersection>, const Material*>
-FindClosestIntersectionAndMaterial(const Scene& scene, const Ray& ray) {
+std::pair<std::optional<Intersection>, const Material*> FindClosestIntersectionAndMaterial(
+    const Scene& scene, const Ray& ray) {
     return FindClosestIntersectionAndMaterial(FindAllIntersectionsAndMaterials(scene, ray));
 }
 
@@ -87,8 +86,7 @@ inline bool ReachThroughPossible(const Material* material) {
     return material->refraction_index == 1 && material->albedo[2] != 0;
 }
 
-Vector LightReach(const Scene& scene, const Light& light,
-                                const Vector& position, int ttl) {
+Vector LightReach(const Scene& scene, const Light& light, const Vector& position, int ttl) {
     if (ttl < 0) {
         return {0, 0, 0};
     }
@@ -107,7 +105,7 @@ Vector LightReach(const Scene& scene, const Light& light,
 
     if (ReachThroughPossible(material)) {
         Light new_light = {closest_intersection.value().GetPosition(),
-                                  material->albedo[2] * material->specular_color * light.intensity};
+                           material->albedo[2] * material->specular_color * light.intensity};
         new_light.position += ray_direction * kEpsilon;
         return LightReach(scene, new_light, position, ttl - 1);
     } else {
@@ -115,8 +113,7 @@ Vector LightReach(const Scene& scene, const Light& light,
     }
 }
 
-Vector CalculateDiffuse(const Scene& scene,
-                                      const Intersection& intersection, int ttl) {
+Vector CalculateDiffuse(const Scene& scene, const Intersection& intersection, int ttl) {
     Vector total_diffusive_illumination = {0, 0, 0};
     for (const auto& light : scene.GetLights()) {
         auto illumination = LightReach(scene, light, intersection.GetPosition(), ttl);
@@ -130,18 +127,15 @@ Vector CalculateDiffuse(const Scene& scene,
     return total_diffusive_illumination;
 }
 
-Vector CalculateSpecular(const Scene& scene,
-                                       const Intersection& intersection,
-                                       const Material* material, const Ray& ray,
-                                       int ttl) {
+Vector CalculateSpecular(const Scene& scene, const Intersection& intersection,
+                         const Material* material, const Ray& ray, int ttl) {
     Vector total_specular_illumination{0, 0, 0};
     for (const auto& light : scene.GetLights()) {
         auto illumination = LightReach(scene, light, intersection.GetPosition(), ttl);
         if (!illumination.Zero()) {
             auto light_direction = (light.position - intersection.GetPosition());
             light_direction.Normalize();
-            auto reflection_direction =
-                Reflect(-light_direction, intersection.GetNormal());
+            auto reflection_direction = Reflect(-light_direction, intersection.GetNormal());
             reflection_direction.Normalize();
             double cos_sigma = -DotProduct(reflection_direction, ray.GetDirection());
 
@@ -152,16 +146,15 @@ Vector CalculateSpecular(const Scene& scene,
     return total_specular_illumination;
 }
 
-Vector CalculateIllumination(const Scene& scene, const Ray& ray,
-                                           bool inside, int ttl) {
+Vector CalculateIllumination(const Scene& scene, const Ray& ray, bool inside, int ttl) {
     if (ttl < 0) {
         return Vector{0, 0, 0};
     }
 
     auto [possible_intersection, material] = FindClosestIntersectionAndMaterial(scene, ray);
-//    if (!possible_intersection) {
-//        return scene.sky_.Trace(ray);
-//    }
+    //    if (!possible_intersection) {
+    //        return scene.sky_.Trace(ray);
+    //    }
     auto intersection = possible_intersection.value();
 
     // Ambient
@@ -179,7 +172,7 @@ Vector CalculateIllumination(const Scene& scene, const Ray& ray,
 
     // Reflected
     Ray reflected_ray = {intersection.GetPosition(),
-                                   Reflect(ray.GetDirection(), intersection.GetNormal())};
+                         Reflect(ray.GetDirection(), intersection.GetNormal())};
     reflected_ray.Propell(kEpsilon);
     Vector illumination_reflected;
     if (material->albedo[1] != 0 && !inside) {
@@ -220,5 +213,3 @@ Vector CalculateIllumination(const Scene& scene, const Ray& ray,
     return illumination_ambient + illumination_diffusive + illumination_specular +
            illumination_reflected + illumination_refracted;
 }
-
-
