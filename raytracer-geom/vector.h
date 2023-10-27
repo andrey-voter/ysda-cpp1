@@ -52,17 +52,14 @@ public:
         Vector cpy(this->data_);
         cpy += rhs;
         return cpy;
-
     }
 
     Vector operator+=(const Vector& rhs) {
         data_[0] += rhs.data_[0];
-        data_[1] +=  rhs.data_[1];
+        data_[1] += rhs.data_[1];
         data_[2] += rhs.data_[2];
         return *this;
     }
-
-
 
     Vector operator*(const double num) const {
         Vector cpy = Vector(this->data_);
@@ -79,7 +76,7 @@ public:
 
     Vector operator/=(const double num) {
         data_[0] /= num;
-        data_[1] /=  num;
+        data_[1] /= num;
         data_[2] /= num;
         return *this;
     }
