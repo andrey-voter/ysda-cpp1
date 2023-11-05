@@ -3,23 +3,9 @@
 #include <cstddef>
 #include <initializer_list>
 #include <utility>
-#include <iostream>
 
 class Deque {
 public:
-    void DequeStats() {
-        std::cout << "------------------Deque stats------------------" << std::endl;
-        std::cout << "num of chunks: " << num_of_chunks_ << std::endl;
-        std::cout << "size: " << size_ << std::endl;
-        std::cout << "left_chunk: " << left_chunk_ << std::endl;
-        std::cout << "left: " << left_ << std::endl;
-        std::cout << "right_chunk: " << right_chunk_ << std::endl;
-        std::cout << "right: " << right_ << std::endl;
-        std::cout << "chunk_size_: " << chunk_size_ << std::endl;
-        std::cout << "chunks: " << chunks_ << std::endl;
-        std::cout << "-----------------------------------------------" << std::endl;
-    }
-
     Deque() = default;
 
     Deque(const Deque& other)
