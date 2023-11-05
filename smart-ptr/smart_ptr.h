@@ -105,19 +105,6 @@ public:
     }
 
     WeakPtr& operator=(WeakPtr other) {
-        //        if (&other == this) {
-        //            return *this;
-        //        }
-        //        if (counter_ && --counter_->weak == 0 && counter_->strong == 0) {
-        //            delete counter_;
-        //        }
-        //        obj_ = other.obj_;
-        //        counter_ = other.counter_;
-        //        if (counter_) {
-        //            ++counter_->weak;
-        //        }
-        //
-        //        return *this;
         std::swap(obj_, other.obj_);
         std::swap(counter_, other.counter_);
         return *this;
