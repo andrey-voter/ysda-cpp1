@@ -7,7 +7,6 @@
 
 class Deque {
 public:
-
     void DequeStats() {
         std::cout << "------------------Deque stats------------------" << std::endl;
         std::cout << "num of chunks: " << num_of_chunks_ << std::endl;
@@ -21,7 +20,6 @@ public:
         std::cout << "-----------------------------------------------" << std::endl;
     }
 
-
     Deque() = default;
 
     Deque(const Deque& other)
@@ -33,10 +31,10 @@ public:
           left_(other.left_),
           right_(other.right_) {
 
-//        std::cout << " copy cons " << std::endl;
-
         DelData();
-        chunks_ = new int*[num_of_chunks_];
+        if (other.chunks_) {
+            chunks_ = new int*[num_of_chunks_];
+        }
 
         for (size_t i = 0; i < num_of_chunks_; ++i) {
             chunks_[i] = new int[chunk_size_];
@@ -58,15 +56,12 @@ public:
           left_(other.left_),
           right_(other.right_) {
 
-//        std::cout << " move cons " << std::endl;
         DelData();
         chunks_ = other.chunks_;
         other.chunks_ = nullptr;
     }
 
     explicit Deque(size_t size) : size_(size) {
-//        std::cout << " cons from size_t " << std::endl;
-        //        memory allocation
         Allocate();
 
         //        initialization
@@ -77,26 +72,13 @@ public:
         }
     }
 
-    Deque(std::initializer_list<int> list) : size_(list.size()) {
-//        std::cout << " init list cons " << std::endl;
-        //        memory allocation
+    Deque(std::initializer_list<int> list) {
         Allocate();
 
         //        initialization
-        size_t chunk_index = 0;
-        size_t element_index = 0;
         for (const int elem : list) {
-            chunks_[chunk_index][element_index] = elem;
-            ++element_index;
-            if (element_index % chunk_size_ == 0) {
-                ++chunk_index;
-                element_index = 0;
-            }
+            PushBack(elem);
         }
-
-        left_chunk_ = 0;
-        right_chunk_ = num_of_chunks_ - 1;
-        right_ = element_index;
     }
 
     ~Deque() {
@@ -161,15 +143,18 @@ public:
             Allocate();
         }
 
-        if (right_ == chunk_size_) {
-            if (right_chunk_ + 1 == num_of_chunks_) {
+        if (right_ == chunk_size_ - 1) {
+            if (right_chunk_ == num_of_chunks_ - 1) {
+                chunks_[right_chunk_][right_] = value;
                 Reallocate();
             } else {
+                chunks_[right_chunk_][right_] = value;
                 ++right_chunk_;
                 right_ = 0;
             }
+        } else {
+            chunks_[right_chunk_][right_++] = value;
         }
-        chunks_[right_chunk_][right_++] = value;
         ++size_;
     }
 
@@ -192,16 +177,17 @@ public:
         }
 
         if (left_ == 0) {
-//            DequeStats();
             if (left_chunk_ == 0) {
+                chunks_[left_chunk_][left_] = value;
                 Reallocate(true);
             } else {
+                chunks_[left_chunk_][left_] = value;
                 --left_chunk_;
                 left_ = chunk_size_ - 1;
             }
+        } else {
+            chunks_[left_chunk_][left_--] = value;
         }
-//        DequeStats();
-        chunks_[left_chunk_][left_--] = value;
         ++size_;
     }
 
@@ -219,12 +205,6 @@ public:
     }
 
     int& operator[](size_t index) {
-        if (left_chunk_ == right_chunk_) {
-            if (index < (chunk_size_ - 1 - left_)) {
-                return chunks_[left_chunk_][left_ + index];
-            }
-        }
-
         if (index < (chunk_size_ - 1 - left_)) {
             return chunks_[left_chunk_][left_ + index + 1];
         }
@@ -235,12 +215,6 @@ public:
     }
 
     const int& operator[](size_t index) const {
-        if (left_chunk_ == right_chunk_) {
-            if (index < (chunk_size_ - 1 - left_)) {
-                return chunks_[left_chunk_][left_ + index];
-            }
-        }
-
         if (index < (chunk_size_ - 1 - left_)) {
             return chunks_[left_chunk_][left_ + index + 1];
         }
@@ -285,7 +259,7 @@ public:
         }
 
         if (num_of_chunks_ == 1) {
-            left_chunk_ = right_chunk_ = left_ = right_ = 0;
+            Reallocate(true);
         } else {
             left_chunk_ = num_of_chunks_ / 2 - 1;
             right_chunk_ = num_of_chunks_ / 2;
@@ -296,36 +270,43 @@ public:
     }
 
     void Reallocate(bool called_from_push_front = false) {
-//        std::cout << "reallocate " << std::endl;
-        int** new_chunks = new int*[3 * num_of_chunks_];
 
-        for (size_t i = 0; i < num_of_chunks_; ++i) {
-            new_chunks[i] = new int[chunk_size_];
-        }
-
-        for (size_t i = 2 * num_of_chunks_; i < 3 * num_of_chunks_; ++i) {
-            new_chunks[i] = new int[chunk_size_];
-        }
-
-
-        size_t old_chunk_index = 0;
-        for (size_t chunk_index = num_of_chunks_; chunk_index < 2 * num_of_chunks_; ++chunk_index) {
-            new_chunks[chunk_index] = chunks_[old_chunk_index++];
-        }
-
-        left_chunk_ = num_of_chunks_ - 1;
-        right_chunk_ = 2 * num_of_chunks_;
+        int** new_chunks = new int*[2 * num_of_chunks_];
 
         if (called_from_push_front) {
-            --right_chunk_;
+
+            for (size_t i = 0; i < num_of_chunks_; ++i) {
+                new_chunks[i] = new int[chunk_size_];
+            }
+
+            size_t old_chunk_index = 0;
+            for (size_t chunk_index = num_of_chunks_; chunk_index < 2 * num_of_chunks_;
+                 ++chunk_index) {
+                new_chunks[chunk_index] = chunks_[old_chunk_index++];
+            }
+
             left_ = chunk_size_ - 1;
+            left_chunk_ = num_of_chunks_ - 1;
+            right_chunk_ += num_of_chunks_;
+
         } else {
+
+            for (size_t i = num_of_chunks_; i < 2 * num_of_chunks_; ++i) {
+                new_chunks[i] = new int[chunk_size_];
+            }
+
+            size_t old_chunk_index = 0;
+            for (size_t chunk_index = 0; chunk_index < num_of_chunks_; ++chunk_index) {
+                new_chunks[chunk_index] = chunks_[old_chunk_index++];
+            }
+
             right_ = 0;
+            right_chunk_ = num_of_chunks_;
         }
 
         delete[] chunks_;
         chunks_ = new_chunks;
-        num_of_chunks_ *= 3;
+        num_of_chunks_ *= 2;
     }
 
 private:
@@ -337,6 +318,6 @@ private:
     size_t num_of_chunks_ = 0;
 
     size_t size_ = 0;
-    size_t left_ = 0;
+    size_t left_ = chunk_size_ - 1;
     size_t right_ = 0;
 };
