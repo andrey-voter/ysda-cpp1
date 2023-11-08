@@ -1,0 +1,6 @@
+push
+10
+dup
+print
+pop_carry
+print
