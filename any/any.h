@@ -30,7 +30,6 @@ private:
 
 public:
     Any() {
-//        std::cout << "Any()" << std::endl;
     }
 
     // T&& - universal (forwarding) reference
@@ -48,18 +47,19 @@ public:
     }
 
     Any(Any&& other) {
-        std::cout << "Any(Any&& other)" << std::endl;
+//        std::cout << "Any(Any&& other)" << std::endl;
         delete ptr_;
         ptr_ = other.ptr_;
         other.ptr_ = nullptr;
     }
 
     Any& operator=(const Any& other) {
-        std::cout << "operator=" << std::endl;
+//        std::cout << "operator=" << std::endl;
         if (&other != this) {
+            auto cpy(other);
             delete ptr_;
-            if (other.ptr_) {
-                ptr_ = other.ptr_->GetCopy();
+            if (cpy.ptr_) {
+                ptr_ = cpy.ptr_->GetCopy();
             } else {
                 ptr_ = nullptr;
             }
