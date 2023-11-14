@@ -36,25 +36,22 @@ public:
     // use std::forward inside this constructor
     template <NotAny T>
     Any(T&& value) : ptr_(new Derived<std::remove_cvref_t<T>>(std::forward<T>(value))) {
-        //        std::cout << "Any(T&& value)" << std::endl;
+
     }
 
     Any(const Any& other) {
-        //        std::cout << "Any(const Any& other)" << std::endl;
         if (other.ptr_) {
             ptr_ = other.ptr_->GetCopy();
         }
     }
 
     Any(Any&& other) {
-        //        std::cout << "Any(Any&& other)" << std::endl;
         delete ptr_;
         ptr_ = other.ptr_;
         other.ptr_ = nullptr;
     }
 
     Any& operator=(const Any& other) {
-        //        std::cout << "operator=" << std::endl;
         if (&other != this) {
             auto cpy(other);
             delete ptr_;
@@ -68,7 +65,6 @@ public:
     }
 
     Any& operator=(Any&& other) {
-        //        std::cout << "operator= &&" << std::endl;
         if (&other != this) {
             delete ptr_;
             ptr_ = other.ptr_;
