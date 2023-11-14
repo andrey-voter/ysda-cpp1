@@ -36,7 +36,6 @@ public:
     // use std::forward inside this constructor
     template <NotAny T>
     Any(T&& value) : ptr_(new Derived<std::remove_cvref_t<T>>(std::forward<T>(value))) {
-
     }
 
     Any(const Any& other) {
@@ -60,15 +59,6 @@ public:
             } else {
                 ptr_ = nullptr;
             }
-        }
-        return *this;
-    }
-
-    Any& operator=(Any&& other) {
-        if (&other != this) {
-            delete ptr_;
-            ptr_ = other.ptr_;
-            other.ptr_ = nullptr;
         }
         return *this;
     }
