@@ -40,12 +40,12 @@ public:
     }
 
     void PutBack() {
-//        std::cout << "--------------PutBack--------------" << std::endl;
+        //        std::cout << "--------------PutBack--------------" << std::endl;
         if (type_ == kNumber) {
             type_ = prev_type_;
             auto str_num = std::to_string(number_);
             for (int i = str_num.size() - 1; i >= 0; --i) {
-//                std::cout << str_num << std::endl;
+                //                std::cout << str_num << std::endl;
                 in_->putback(str_num[i]);
             }
             number_ = prev_number_;
@@ -84,13 +84,6 @@ public:
     virtual ~ExpressionBase() = default;
     virtual int64_t Evaluate() const = 0;
 };
-
-    // void Stats(std::shared_ptr<Tokenizer> tokenizer) {
-    //     std::cout << "<===Stats===>" << std::endl;
-    //     std::cout << "type: " << (tokenizer->GetType() == 0 ? "number" : "symbol") << std::endl;
-    //     std::cout << "symbol: " << tokenizer->GetSymbol() << std::endl;
-    //     std::cout << "number: " << tokenizer->GetNumber() << std::endl;
-    // }
 
 class Expression : public ExpressionBase {
 public:
