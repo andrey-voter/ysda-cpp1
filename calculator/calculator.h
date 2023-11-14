@@ -2,11 +2,15 @@
 
 #include <sstream>
 #include <memory>
-#include <format>
 #include <string>
+#include <iostream>
 
+class Expression;
+class Term;
 class Tokenizer {
 public:
+    friend Term;
+    friend Expression;
     explicit Tokenizer(std::istream* in) : in_{in} {
         Consume();
     }
@@ -17,16 +21,39 @@ public:
         char c;
         *in_ >> c;
         if (in_->eof()) {
+            prev_type_ = type_;
             type_ = kEnd;
             return;
         }
         if (std::isdigit(c)) {
             in_->putback(c);
+            prev_number_ = number_;
             *in_ >> number_;
+            prev_type_ = type_;
             type_ = kNumber;
         } else {
+            prev_symbol_ = symbol_;
             symbol_ = c;
+            prev_type_ = type_;
             type_ = kSymbol;
+        }
+    }
+
+    void PutBack() {
+//        std::cout << "--------------PutBack--------------" << std::endl;
+        if (type_ == kNumber) {
+            type_ = prev_type_;
+            auto str_num = std::to_string(number_);
+            for (int i = str_num.size() - 1; i >= 0; --i) {
+//                std::cout << str_num << std::endl;
+                in_->putback(str_num[i]);
+            }
+            number_ = prev_number_;
+
+        } else if (type_ == kSymbol) {
+            type_ = prev_type_;
+            in_->putback(symbol_);
+            symbol_ = prev_symbol_;
         }
     }
 
@@ -44,10 +71,12 @@ public:
 
 private:
     std::istream* in_;
-
-    TokenType type_;
-    int64_t number_;
+    TokenType type_ = kNumber;
+    TokenType prev_type_;
+    int64_t number_ = 0;
+    int64_t prev_number_ = 0;
     char symbol_;
+    char prev_symbol_;
 };
 
 class ExpressionBase {
@@ -56,24 +85,26 @@ public:
     virtual int64_t Evaluate() const = 0;
 };
 
-class Term;
+    // void Stats(std::shared_ptr<Tokenizer> tokenizer) {
+    //     std::cout << "<===Stats===>" << std::endl;
+    //     std::cout << "type: " << (tokenizer->GetType() == 0 ? "number" : "symbol") << std::endl;
+    //     std::cout << "symbol: " << tokenizer->GetSymbol() << std::endl;
+    //     std::cout << "number: " << tokenizer->GetNumber() << std::endl;
+    // }
 
 class Expression : public ExpressionBase {
 public:
-    Expression(Tokenizer* tokenizer) : tokenizer_(tokenizer) {
+    Expression(std::shared_ptr<Tokenizer> tokenizer) : tokenizer_(tokenizer) {
     }
-    int64_t Evaluate() const override {
-        Term term(tokenizer_);
-        int64_t value = term.Evaluate();
-    }
+    int64_t Evaluate() const override;
 
 private:
-    Tokenizer* tokenizer_;
+    std::shared_ptr<Tokenizer> tokenizer_;
 };
 
 class Factor : public ExpressionBase {
 public:
-    Factor(Tokenizer* tokenizer) : tokenizer_(tokenizer) {
+    Factor(std::shared_ptr<Tokenizer> tokenizer) : tokenizer_(tokenizer) {
     }
 
     int64_t Evaluate() const override {
@@ -87,7 +118,7 @@ public:
             } else if (sym == '(') {
                 Expression expr(tokenizer_);
                 int64_t value = expr.Evaluate();
-                tokenizer_->Consume();  // current lexeme is right brace
+                tokenizer_->Consume();  // current lexeme is right brace (if not it is an error)
                 return value;
             }
         } else if (type == Tokenizer::kNumber) {
@@ -95,16 +126,16 @@ public:
             tokenizer_->Consume();
             return value;
         }
-        return 0;  //? eof
+        throw;
     }
 
 private:
-    Tokenizer* tokenizer_;
+    std::shared_ptr<Tokenizer> tokenizer_;
 };
 
 class Term : public ExpressionBase {
 public:
-    Term(Tokenizer* tokenizer) : tokenizer_(tokenizer) {
+    Term(std::shared_ptr<Tokenizer> tokenizer) : tokenizer_(tokenizer) {
     }
 
     int64_t Evaluate() const override {
@@ -120,9 +151,10 @@ public:
                 } else if (sym == '/') {
                     value /= factor.Evaluate();
                 } else {
-                    break;
+                    tokenizer_->PutBack();
+                    return value;
                 }
-            } else { // error, there should be symbol, not number (it can be eof)
+            } else {
                 break;
             }
         }
@@ -130,92 +162,36 @@ public:
     }
 
 private:
-    Tokenizer* tokenizer_;
+    std::shared_ptr<Tokenizer> tokenizer_;
 };
 
-
-
-
-//class Constant : public ExpressionBase {
-//public:
-//    Constant(int64_t value) : value_(value) {
-//    }
-//
-//    int64_t Evaluate() const override {
-//        return value_;
-//    }
-//
-//private:
-//    int64_t value_;
-//};
-//
-//class UnaryExpression : public ExpressionBase {
-//public:
-//    UnaryExpression(char operation, std::unique_ptr<ExpressionBase> operand)
-//        : operation_(operation), operand_(std::move(operand)) {
-//    }
-//
-//    int64_t Evaluate() const override {
-//        if (operation_ == '-') {
-//            return -operand_->Evaluate();
-//        } else {
-//            throw std::runtime_error("Unknown unary expression");
-//        }
-//    }
-//
-//private:
-//    char operation_;
-//    std::unique_ptr<ExpressionBase> operand_;
-//};
-//
-//class BinaryExpression : public ExpressionBase {
-//public:
-//    BinaryExpression(char operation, std::unique_ptr<ExpressionBase> left,
-//                     std::unique_ptr<ExpressionBase> right)
-//        : operation_(operation), left_(std::move(left)), right_(std::move(right)) {
-//    }
-//
-//    int64_t Evaluate() const override {
-//        switch (operation_) {
-//            case '+':
-//                return left_->Evaluate() + right_->Evaluate();
-//            case '-':
-//                return left_->Evaluate() - right_->Evaluate();
-//            case '*':
-//                return left_->Evaluate() * right_->Evaluate();
-//            case '/':
-//                return left_->Evaluate() / right_->Evaluate();
-//            default:
-//                throw std::runtime_error("Unknown binary expression");
-//        }
-//    }
-//
-//private:
-//    char operation_;
-//    std::unique_ptr<ExpressionBase> left_;
-//    std::unique_ptr<ExpressionBase> right_;
-//};
+int64_t Expression::Evaluate() const {
+    Term term(tokenizer_);
+    int64_t value = term.Evaluate();
+    while (true) {
+        auto type = tokenizer_->GetType();
+        if (type == Tokenizer::kSymbol) {
+            char sym = tokenizer_->GetSymbol();
+            tokenizer_->Consume();
+            if (sym == '+') {
+                value += term.Evaluate();
+            } else if (sym == '-') {
+                value -= term.Evaluate();
+            } else {
+                tokenizer_->PutBack();
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    return value;
+}
 
 std::unique_ptr<ExpressionBase> ParseExpression(Tokenizer* tokenizer) {
-    //    auto token_type = tokenizer->GetType();
-    //    if (token_type == Tokenizer::kNumber) {
-    //        auto number = tokenizer->GetNumber();
-    //        tokenizer->Consume();
-    //        return std::make_unique<Constant>(number);
-    //    } else if (token_type == Tokenizer::kSymbol) {
-    //        char symbol = tokenizer->GetSymbol();
-    //        tokenizer->Consume();
-    //        if (symbol == '(') {
-    //            auto inner_expression = ParseExpression(tokenizer);
-    //            // error handling
-    //            tokenizer->Consume();
-    //            return inner_expression;
-    //        }
-    //        if (symbol == '-') {
-    //            tokenizer->Consume();
-    //            auto operand = ParseExpression(tokenizer);
-    //            return std::make_unique<UnaryExpression>(symbol, std::move(operand));
-    //        }
-    //    }
-    return nullptr;
+    auto token_type = tokenizer->GetType();
+    if (token_type == Tokenizer::kEnd) {
+        return nullptr;
+    }
+    return std::make_unique<Expression>(Expression(std::make_shared<Tokenizer>(*tokenizer)));
 }
