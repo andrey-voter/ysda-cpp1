@@ -4,68 +4,79 @@
 #include <string>
 #include <vector>
 #include <string_view>
+#include <iostream>
+#include <deque>
 
 class Editor {
 public:
     class TextView {
     public:
-        TextView(const std::string& str, size_t pos, size_t n, bool is_reversed = false) :
-              str_(str),
-              pos_(pos),
-              size_(std::min(n, str_.size() - pos)),
-              isReversed_(is_reversed) {}
+        TextView(const std::string& str, size_t pos, size_t n)
+            : str_(str.substr(pos, n)) {}
 
-        // Итераторы для поддержки range-based for
         auto begin() const {
-            return isReversed_ ? std::make_reverse_iterator(str_.begin() + pos_ + size_) : str_.begin() + pos_;
+            return str_.begin();
         }
 
         auto end() const {
-            return isReversed_ ? std::make_reverse_iterator(str_.begin() + pos_) : str_.begin() + pos_ + size_;
+            return str_.end();
         }
 
     private:
-        const std::string& str_;
-        size_t pos_;
-        size_t size_;
-        bool isReversed_;
+        std::string str_;
     };
-    void Type(char symbol) {
+
+
+    void Type(char symbol, bool new_action = true) {
         before_cursor_.push_back(symbol);
         ++cursor_position_;
-        done_commands_.push_back(__func__ + symbol);
-        cancelled_commands_.clear();
+        std::string func_name = __func__;
+        func_name += symbol;
+        done_commands_.push_back(func_name);
+        if (new_action) {
+            cancelled_commands_.clear();
+        }
     }
 
-    void ShiftLeft() {
+    void ShiftLeft(bool new_action = true) {
         if (cursor_position_) {
             --cursor_position_;
             char c = before_cursor_.back();
             before_cursor_.pop_back();
             after_cursor_.push_back(c);
+            after_cursor_helper_.push_front(c);
             done_commands_.push_back(__func__);
-            cancelled_commands_.clear();
+            if (new_action) {
+                cancelled_commands_.clear();
+            }
         }
     }
 
-    void ShiftRight() {
+    void ShiftRight(bool new_action = true) {
         if (cursor_position_ < Size()) {
             ++cursor_position_;
             char c = after_cursor_.back();
             after_cursor_.pop_back();
+            after_cursor_helper_.pop_front();
             before_cursor_.push_back(c);
             done_commands_.push_back(__func__);
-            cancelled_commands_.clear();
+            if (new_action) {
+                cancelled_commands_.clear();
+            }
         }
     }
 
-    void Backspace() {
+    void Backspace(bool new_action = true) {
         if (!before_cursor_.empty()) {
             --cursor_position_;
             char c = before_cursor_.back();
             before_cursor_.pop_back();
-            done_commands_.push_back(__func__ + c);
-            cancelled_commands_.clear();
+            std::string func_name = __func__;
+            func_name += c;
+            done_commands_.push_back(func_name);
+            if (new_action) {
+                cancelled_commands_.clear();
+            }
         }
     }
 
@@ -78,12 +89,14 @@ public:
                 ++cursor_position_;
                 char c = after_cursor_.back();
                 after_cursor_.pop_back();
+                after_cursor_helper_.pop_front();
                 before_cursor_.push_back(c);
             } else if (last_command == "ShiftRight") {
                 --cursor_position_;
                 char c = before_cursor_.back();
                 before_cursor_.pop_back();
                 after_cursor_.push_back(c);
+                after_cursor_helper_.push_front(c);
             } else if (last_command.find("Type") != std::string::npos) {
                 --cursor_position_;
                 before_cursor_.pop_back();
@@ -101,13 +114,13 @@ public:
             cancelled_commands_.pop_back();
 
             if (cancelled_command == "ShiftLeft") {
-                ShiftLeft();
+                ShiftLeft(false);
             } else if (cancelled_command == "ShiftRight") {
-                ShiftRight();
+                ShiftRight(false);
             } else if (cancelled_command.find("Type") != std::string::npos) {
-                Type(cancelled_command.back());
+                Type(cancelled_command.back(), false);
             } else {
-                Backspace();
+                Backspace(false);
             }
         }
     }
@@ -117,16 +130,8 @@ public:
     }
 
     TextView GetText(size_t pos, size_t count) const {
-        // only before cursor
-        if (pos < cursor_position_ and (count + pos < before_cursor_.size())) {
-            return {before_cursor_, pos, count};
-        }
-        // only after cursor
-        if (pos > cursor_position_ and (pos - cursor_position_ + count < after_cursor_.size())) {
-            return {after_cursor_, pos, count, true};
-        }
-        // view includes both
-        return {before_cursor_, pos - cursor_position_, count};
+        std::string str(after_cursor_helper_.begin(), after_cursor_helper_.end());
+        return {before_cursor_ + str, pos, count};
     }
 
     size_t GetPosition() const {
@@ -134,8 +139,10 @@ public:
     }
 
 private:
+
     std::string before_cursor_;
     std::string after_cursor_;
+    std::deque<char> after_cursor_helper_;
     size_t cursor_position_ = 0;
 
     std::vector<std::string> done_commands_;
