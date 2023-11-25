@@ -11,29 +11,64 @@ class Editor {
 public:
     class TextView {
     public:
-        TextView(const std::string& str, size_t pos, size_t n)
-            : str_(str.substr(pos, n)) {}
+        class Iterator {
+        public:
+            Iterator(std::string_view before, std::string_view after, size_t pos)
+                : before_(before), after_(after), cur_pos_(pos) {
+            }
 
-        auto begin() const {
-            return str_.begin();
+            Iterator& operator++() {
+                ++cur_pos_;
+                return *this;
+            }
+
+            char operator*() const {
+                if (cur_pos_ < before_.size()) {
+                    return before_[cur_pos_];
+                }
+                return after_[after_.size() + before_.size() - cur_pos_ - 1];
+            }
+
+            bool operator==(Iterator rhs) {
+                return cur_pos_ == rhs.cur_pos_;
+            }
+
+            bool operator!=(Iterator rhs) {
+                return cur_pos_ != rhs.cur_pos_;
+            }
+
+        private:
+            std::string_view before_;
+            std::string_view after_;
+            size_t cur_pos_;
+        };
+
+        TextView(const std::string_view before, const std::string_view after, size_t pos, size_t count)
+            : before_(before), after_(after), pos_(pos), count_(count) {
         }
 
-        auto end() const {
-            return str_.end();
+        Iterator begin() {
+            return Iterator(before_, after_, pos_);
+        }
+
+        Iterator end() {
+            return Iterator(before_, after_, pos_ + count_);
         }
 
     private:
-        std::string str_;
+        std::string_view before_;
+        std::string_view after_;
+        size_t pos_;
+        size_t count_;
     };
-
 
     void Type(char symbol, bool new_action = true) {
         before_cursor_.push_back(symbol);
         ++cursor_position_;
         std::string func_name = __func__;
         func_name += symbol;
-        done_commands_.push_back(func_name);
         if (new_action) {
+            done_commands_.push_back(func_name);
             cancelled_commands_.clear();
         }
     }
@@ -44,9 +79,8 @@ public:
             char c = before_cursor_.back();
             before_cursor_.pop_back();
             after_cursor_.push_back(c);
-            after_cursor_helper_.push_front(c);
-            done_commands_.push_back(__func__);
             if (new_action) {
+                done_commands_.push_back(__func__);
                 cancelled_commands_.clear();
             }
         }
@@ -57,10 +91,9 @@ public:
             ++cursor_position_;
             char c = after_cursor_.back();
             after_cursor_.pop_back();
-            after_cursor_helper_.pop_front();
             before_cursor_.push_back(c);
-            done_commands_.push_back(__func__);
             if (new_action) {
+                done_commands_.push_back(__func__);
                 cancelled_commands_.clear();
             }
         }
@@ -73,8 +106,8 @@ public:
             before_cursor_.pop_back();
             std::string func_name = __func__;
             func_name += c;
-            done_commands_.push_back(func_name);
             if (new_action) {
+                done_commands_.push_back(func_name);
                 cancelled_commands_.clear();
             }
         }
@@ -89,14 +122,12 @@ public:
                 ++cursor_position_;
                 char c = after_cursor_.back();
                 after_cursor_.pop_back();
-                after_cursor_helper_.pop_front();
                 before_cursor_.push_back(c);
             } else if (last_command == "ShiftRight") {
                 --cursor_position_;
                 char c = before_cursor_.back();
                 before_cursor_.pop_back();
                 after_cursor_.push_back(c);
-                after_cursor_helper_.push_front(c);
             } else if (last_command.find("Type") != std::string::npos) {
                 --cursor_position_;
                 before_cursor_.pop_back();
@@ -130,19 +161,25 @@ public:
     }
 
     TextView GetText(size_t pos, size_t count) const {
-        std::string str(after_cursor_helper_.begin(), after_cursor_helper_.end());
-        return {before_cursor_ + str, pos, count};
+        std::string_view first = before_cursor_;
+        std::string_view second = after_cursor_;
+        return {first, second, pos, count};
     }
 
     size_t GetPosition() const {
         return cursor_position_;
     }
 
-private:
+    void Stats() const {
+        std::cout << "<=== Stats ===>" << std::endl;
+        std::cout << "before: " << before_cursor_ << std::endl;
+        std::cout << "after: " << after_cursor_ << std::endl;
+        std::cout << "cursor pos: " << GetPosition() << std::endl;
+    }
 
+private:
     std::string before_cursor_;
     std::string after_cursor_;
-    std::deque<char> after_cursor_helper_;
     size_t cursor_position_ = 0;
 
     std::vector<std::string> done_commands_;
