@@ -53,8 +53,7 @@ private:
     std::string api_endpoint_;
 };
 
-std::unique_ptr<IForecaster> CreateYandexForecaster(
-    const std::string& api_key,
-    const std::string& api_endpoint) {
+std::unique_ptr<IForecaster> CreateYandexForecaster(const std::string& api_key,
+                                                    const std::string& api_endpoint) {
     return std::make_unique<YandexForecaster>(YandexForecaster(api_key, api_endpoint));
 }
