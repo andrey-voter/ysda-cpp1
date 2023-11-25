@@ -67,8 +67,9 @@ public:
         ++cursor_position_;
         std::string func_name = __func__;
         func_name += symbol;
+        done_commands_.push_back(func_name);
         if (new_action) {
-            done_commands_.push_back(func_name);
+
             cancelled_commands_.clear();
         }
     }
@@ -79,8 +80,9 @@ public:
             char c = before_cursor_.back();
             before_cursor_.pop_back();
             after_cursor_.push_back(c);
+            done_commands_.push_back(__func__);
             if (new_action) {
-                done_commands_.push_back(__func__);
+
                 cancelled_commands_.clear();
             }
         }
@@ -92,8 +94,9 @@ public:
             char c = after_cursor_.back();
             after_cursor_.pop_back();
             before_cursor_.push_back(c);
+            done_commands_.push_back(__func__);
             if (new_action) {
-                done_commands_.push_back(__func__);
+
                 cancelled_commands_.clear();
             }
         }
@@ -106,8 +109,9 @@ public:
             before_cursor_.pop_back();
             std::string func_name = __func__;
             func_name += c;
+            done_commands_.push_back(func_name);
             if (new_action) {
-                done_commands_.push_back(func_name);
+
                 cancelled_commands_.clear();
             }
         }
@@ -185,3 +189,4 @@ private:
     std::vector<std::string> done_commands_;
     std::vector<std::string> cancelled_commands_;
 };
+
