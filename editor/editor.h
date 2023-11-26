@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include <string_view>
-#include <iostream>
 #include <deque>
 
 class Editor {
@@ -43,7 +42,8 @@ public:
             size_t cur_pos_;
         };
 
-        TextView(const std::string_view before, const std::string_view after, size_t pos, size_t count)
+        TextView(const std::string_view before, const std::string_view after, size_t pos,
+                 size_t count)
             : before_(before), after_(after), pos_(pos), count_(count) {
         }
 
@@ -170,13 +170,6 @@ public:
         return cursor_position_;
     }
 
-    void Stats() const {
-        std::cout << "<=== Stats ===>" << std::endl;
-        std::cout << "before: " << before_cursor_ << std::endl;
-        std::cout << "after: " << after_cursor_ << std::endl;
-        std::cout << "cursor pos: " << GetPosition() << std::endl;
-    }
-
 private:
     std::string before_cursor_;
     std::string after_cursor_;
@@ -185,4 +178,3 @@ private:
     std::vector<std::string> done_commands_;
     std::vector<std::string> cancelled_commands_;
 };
-
