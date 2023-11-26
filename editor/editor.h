@@ -69,7 +69,6 @@ public:
         func_name += symbol;
         done_commands_.push_back(func_name);
         if (new_action) {
-
             cancelled_commands_.clear();
         }
     }
@@ -82,7 +81,6 @@ public:
             after_cursor_.push_back(c);
             done_commands_.push_back(__func__);
             if (new_action) {
-
                 cancelled_commands_.clear();
             }
         }
@@ -96,7 +94,6 @@ public:
             before_cursor_.push_back(c);
             done_commands_.push_back(__func__);
             if (new_action) {
-
                 cancelled_commands_.clear();
             }
         }
@@ -111,7 +108,6 @@ public:
             func_name += c;
             done_commands_.push_back(func_name);
             if (new_action) {
-
                 cancelled_commands_.clear();
             }
         }
@@ -121,6 +117,7 @@ public:
         if (!done_commands_.empty()) {
             std::string last_command = done_commands_.back();
             done_commands_.pop_back();
+            cancelled_commands_.push_back(last_command);
 
             if (last_command == "ShiftLeft") {
                 ++cursor_position_;
@@ -139,7 +136,6 @@ public:
                 ++cursor_position_;
                 before_cursor_.push_back(last_command.back());
             }
-            cancelled_commands_.push_back(last_command);
         }
     }
 
