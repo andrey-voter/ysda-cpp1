@@ -1,5 +1,12 @@
-int main(int argc, char* argv[]) {
+#include "bot.h"
 
-//    6410806161:AAEPAqtJ0CO4-f1Dzo-qK3OJmAuFIWjMFDU
+int main() {
+    try{
+        Bot bot;
+        bot.Run();
+        return 0;
+    } catch (const std::exception& exception){
+        std::cerr << "main crashed: " << exception.what() << std::endl;
+    }
 
 }
