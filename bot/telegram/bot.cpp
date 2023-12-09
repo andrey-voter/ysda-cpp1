@@ -41,7 +41,6 @@ int Bot::GetOffset() {
 }
 
 void Bot::OnMsg(Message message) {
-
     auto text = message.GetText();
 
     if (text == "/random") {
@@ -63,6 +62,5 @@ void Bot::OnMsg(Message message) {
     if (text == "/crash") {
         abort();
     }
-
     client_->SendMessage(message.GetChatId(), "Your text was: " + message.GetText());
 }

@@ -82,7 +82,6 @@ Poco::JSON::Object Client::ExecuteRequest(const std::string& method,
     if (status / 100 != 2) {
         throw Poco::Exception("Something went wrong during url query: " + std::to_string(status));
     }
-
     Poco::JSON::Parser parser;
     auto result = parser.parse(body).extract<Poco::JSON::Object::Ptr>();
     return *result;
