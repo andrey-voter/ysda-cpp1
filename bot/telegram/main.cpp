@@ -8,5 +8,4 @@ int main() {
     } catch (const std::exception& exception){
         std::cerr << "main crashed: " << exception.what() << std::endl;
     }
-
 }
