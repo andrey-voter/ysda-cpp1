@@ -1,13 +1,10 @@
 #include "bot.h"
-#include <iostream>
 #include <Poco/URI.h>
-#include <Poco/Net/HTTPClientSession.h>
 #include <Poco/Net/HTTPRequest.h>
 #include <Poco/Net/HTTPResponse.h>
-#include <Poco/JSON/Parser.h>
 #include <fstream>
 
-Bot::Bot() {
+Bot::Bot() : client_(std::make_shared<Client>()) {
 }
 
 void Bot::Run() {
@@ -18,8 +15,10 @@ void Bot::Run() {
             }
         }
     } catch (const std::exception &exception) {
-        std::cerr << exception.what() << std::endl;
-        std::cout << "Oops, bpt failed... Starting bot again" << std::endl;
+        if (std::string(exception.what()) == "stop") {
+            client_->SetOffset(GetOffset() + 1);
+            return;
+        }
         Run();
     }
 }
@@ -41,18 +40,13 @@ int Bot::GetOffset() {
     return offset;
 }
 
-void Bot::SetOffset(int offset) {
-    std::ofstream file;
-    file.open("offset.txt");
-    file << offset;
-    file.close();
-}
-
 void Bot::OnMsg(Message message) {
+
     auto text = message.GetText();
 
     if (text == "/random") {
-        client_->SendMessage(message.GetChatId(), std::to_string(std::rand()));
+        client_->ReplyToMessage(message.GetChatId(), std::to_string(std::rand()),
+                                message.GetMessageId());
         return;
     }
     if (text == "/weather") {
@@ -60,15 +54,15 @@ void Bot::OnMsg(Message message) {
         return;
     }
     if (text == "/styleguide") {
-        std::string joke("Тут может быть ваша шутка.");
         client_->SendMessage(message.GetChatId(), "Funny joke");
         return;
     }
     if (text == "/stop") {
-        // TODO
-        abort();
+        throw std::runtime_error("stop");
     }
     if (text == "/crash") {
         abort();
     }
+
+    client_->SendMessage(message.GetChatId(), "Your text was: " + message.GetText());
 }

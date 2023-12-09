@@ -15,5 +15,4 @@ private:
     std::shared_ptr<Client> client_;
     std::vector<Message> GetUpdates();
     int GetOffset();
-    void SetOffset(int offset);
 };
