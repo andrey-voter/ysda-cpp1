@@ -64,6 +64,14 @@ Poco::JSON::Object Client::ExecuteRequest(const std::string& method,
             data->set("timeout", std::stoll(params.at("timeout")));
         }
 
+        if (params.contains("sticker")) {
+            data->set("sticker", params.at("sticker"));
+        }
+
+        if (params.contains("document")) {
+            data->set("document", params.at("document"));
+        }
+
         std::ostringstream oss;
         data->stringify(oss, 2);
 
@@ -133,4 +141,18 @@ void Client::ReplyToMessage(int64_t chat_id, const std::string& text, int messag
     params["text"] = text;
     params["reply_to_message_id"] = std::to_string(message_id);
     ExecuteRequest("/sendMessage", params);
+}
+
+void Client::SendSticker(int64_t chat_id, const std::string& sticker) {
+    std::map<std::string, std::string> params;
+    params["chat_id"] = std::to_string(chat_id);
+    params["sticker"] = sticker;
+    ExecuteRequest("/sendSticker", params);
+}
+
+void Client::SendGif(int64_t chat_id, const std::string& file_id) {
+    std::map<std::string, std::string> params;
+    params["chat_id"] = std::to_string(chat_id);
+    params["document"] = file_id;
+    ExecuteRequest("/sendDocument", params);
 }

@@ -25,7 +25,11 @@ void Bot::Run() {
 
 std::vector<Message> Bot::GetUpdates() {
     int offset = GetOffset();
-    auto messages = client_->GetUpdates(offset + 1);
+    auto messages = client_->GetUpdates(offset);
+    if (!messages.empty()) {
+        offset += messages.size();
+        client_->SetOffset(offset);
+    }
     return messages;
 }
 
@@ -61,6 +65,14 @@ void Bot::OnMsg(Message message) {
     }
     if (text == "/crash") {
         abort();
+    }
+    if (text == "/gif") {
+        client_->SendGif(message.GetChatId(), "CgACAgIAAxkBAAOVZYfpvoBx4NNnHBpOm8OVtoVKPYQAAtsSAAIa1VhIIlhFmsu99oozBA");
+        return;
+    }
+    if (text == "/sticker") {
+        client_->SendSticker(message.GetChatId(), "CAACAgIAAxkBAAI21GWH5AWn-r4cT70ggd0-wv9Nr1HnAAI_GAACDt0ZSIEx6TOzE3xYMwQ");
+        return;
     }
     client_->SendMessage(message.GetChatId(), "Your text was: " + message.GetText());
 }

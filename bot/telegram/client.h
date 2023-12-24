@@ -13,6 +13,8 @@ public:
     User GetMe();
     void SendMessage(int64_t chat_id, const std::string& text);
     void ReplyToMessage(int64_t chat_id, const std::string& text, int message_id);
+    void SendSticker(int64_t chat_id, const std::string& sticker_id);
+    void SendGif(int64_t chat_id, const std::string& file_id);
     std::vector<Message> GetUpdates(int offset = 0, int timeout = 0);
     void SetOffset(int offset);
 
