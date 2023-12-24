@@ -67,11 +67,14 @@ void Bot::OnMsg(Message message) {
         abort();
     }
     if (text == "/gif") {
-        client_->SendGif(message.GetChatId(), "CgACAgIAAxkBAAOVZYfpvoBx4NNnHBpOm8OVtoVKPYQAAtsSAAIa1VhIIlhFmsu99oozBA");
+        client_->SendGif(message.GetChatId(),
+                         "CgACAgIAAxkBAAOVZYfpvoBx4NNnHBpOm8OVtoVKPYQAAtsSAAIa1VhIIlhFmsu99oozBA");
         return;
     }
     if (text == "/sticker") {
-        client_->SendSticker(message.GetChatId(), "CAACAgIAAxkBAAI21GWH5AWn-r4cT70ggd0-wv9Nr1HnAAI_GAACDt0ZSIEx6TOzE3xYMwQ");
+        client_->SendSticker(
+            message.GetChatId(),
+            "CAACAgIAAxkBAAI21GWH5AWn-r4cT70ggd0-wv9Nr1HnAAI_GAACDt0ZSIEx6TOzE3xYMwQ");
         return;
     }
     client_->SendMessage(message.GetChatId(), "Your text was: " + message.GetText());
